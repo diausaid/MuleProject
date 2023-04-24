@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:gmail="http://www.mulesoft.org/schema/mule/gmail" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/gmail http://www.mulesoft.org/schema/mule/gmail/current/mule-gmail.xsd">
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="aa4d53ff-3287-44a3-abf5-e32d940ab5f5" >
+		<email:smtp-connection host="smtp.google.com" user="shmehdis" password="Mehdis12" />
+	</email:smtp-config>
+	<email:imap-config name="Email_IMAP" doc:name="Email IMAP" doc:id="96420a30-5d58-4a62-8ff5-536685ff3f16" >
+		<email:imap-connection host="imap.google.com" user="shmehdis@gmail.com" password="Mehdis12@" />
+	</email:imap-config>
+	<flow name="emailsendingandtextingFlow" doc:id="227d2752-8c4b-46b1-a2a3-6655f42f9f2f" >
+		<scheduler doc:name="Scheduler" doc:id="91728f72-1e86-49ca-bf76-ffcdd929b064" >
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</scheduler>
+		<email:send doc:name="Send" doc:id="62f4ceca-ae5a-4b8a-a962-a8e83255db5e" config-ref="Email_SMTP" fromAddress="shmehdis@gmial.com">
+			<email:to-addresses >
+				<email:to-address value="emuleda@yahoo.com" />
+			</email:to-addresses>
+		</email:send>
+		<email:count-messages-imap doc:name="Count messages - IMAP" doc:id="df5baaf1-ed60-44bb-a4c5-8ef85be6859f" config-ref="Email_IMAP"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="874d559c-888b-444a-99ea-d7b53bd7970b" type="EMAIL:SEND">
+				<ee:transform doc:name="Transform Message" doc:id="17af4c55-4642-4583-b6c1-c88d8244aec8" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+{
+	message : "connection error"
+	
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="f96d9ace-7810-46ce-abb9-d8436f278ed4" message="#[payload]"/>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d6028717-4f1a-4787-b1e5-0e238d67c703" type="EMAIL:CONNECTIVITY">
+				<logger level="INFO" doc:name="Logger" doc:id="f5c287d4-f946-49ec-8e38-0334e2874336" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
